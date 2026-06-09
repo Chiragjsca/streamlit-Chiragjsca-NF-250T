@@ -609,7 +609,7 @@ for name, info in sheet_live_data.items():
 
 sheet_cards_html += "</div>"
 
-with st.expander("📈 Click to view NSE Price Data Matrix", expanded=False):
+with st.expander("📈 Click to view Top 250 Stocks Matrix", expanded=False):
     # Failsafe if the sheet is completely empty or all rows returned "No Data"
     if sheet_valid_cards_count == 0:
         st.info("Stock matrix data is currently unavailable. Please check the 'NSE Price Data' sheet.")
