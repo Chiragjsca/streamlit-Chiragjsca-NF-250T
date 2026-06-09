@@ -1257,7 +1257,7 @@ if not raw_df.empty:
     st.sidebar.markdown("---")
     st.sidebar.header("📊 My Watchlist")
 
-    if st.session_state.watchlist:
+    if st.session_state.get("watchlist"):
         wl_count = len(st.session_state.watchlist)
         st.sidebar.caption(f"🔖 {wl_count} stock{'s' if wl_count > 1 else ''} saved")
         for _ws, _wi in list(st.session_state.watchlist.items()):
