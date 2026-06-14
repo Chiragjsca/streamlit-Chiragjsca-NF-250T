@@ -156,7 +156,7 @@ if "ai_history" not in st.session_state:
 
 if not st.session_state.logged_in:
     # Top hint
-    st.markdown("<p style='text-align: center; margin-top: 100px; color: Green; font-size: 18px;'>NF-250-T Dashboard</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; margin-top: 100px; color: Green; font-size: 18px;'> NF-250-T Dashboard</p>", unsafe_allow_html=True)
     st.markdown("<h1 style='text-align: center; margin-top: 0px; font-size: 20px;'>🔐 Admin Login</h1>", unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1, 1, 1])
@@ -199,7 +199,7 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-    
+
 # ==========================================
 # 🌍 GLOBAL MARKET TICKER (LIVE DATA GRID)
 # ==========================================
@@ -949,7 +949,7 @@ def get_gspread_client():
     creds = Credentials.from_service_account_info(info, scopes=scope)
     return gspread.authorize(creds)
 
-SPREADSHEET_ID = "1OvX7BdWiqejOmOsSiMogC2ni-b7irWch4TC2HqR_93c"
+SPREADSHEET_ID = "1UojzsJDrxwszCbr81v-fiix8lnvTGuzh-kR5_32bfrc"
 
 def ensure_watchlist_sheet(client):
     """Create Watchlist sheet if it doesn't exist; return worksheet."""
@@ -1257,7 +1257,7 @@ if not raw_df.empty:
     st.sidebar.markdown("---")
     st.sidebar.header("📊 My Watchlist")
 
-    if st.session_state.get("watchlist"):
+    if st.session_state.watchlist:
         wl_count = len(st.session_state.watchlist)
         st.sidebar.caption(f"🔖 {wl_count} stock{'s' if wl_count > 1 else ''} saved")
         for _ws, _wi in list(st.session_state.watchlist.items()):
@@ -1319,7 +1319,7 @@ if not raw_df.empty:
     if selected_symbol_col in filtered_df.columns:
         core_sequence.append(selected_symbol_col)
 
-    vol_target = next((c for c in actual_cols if "turnover" in c.lower() or "volume" in c.lower()), None)
+    vol_target = next((c for c in actual_cols if "turnover" in c.lower()), None)
     if vol_target and vol_target not in core_sequence: core_sequence.append(vol_target)
 
     close_target = next((c for c in actual_cols if "close price" in c.lower() or "prev" in c.lower()), None)
@@ -1510,7 +1510,7 @@ if not raw_df.empty:
                 "🪁 Zerodha Portal", "📊 MarketSmith India", "📉 TradingView Symbol Profile",
                 "🤖 AI Stock Analysis", "💻 AI Pine Script Builder",
                 "🔬 Bottom Fishing Score",
-                "🎯 GTT Order Calculator", "📊 Watchlist Manager"
+                "🎯 GTT Order Calculator", "📊 Watchlist Manager", "📰 News Feed"
             ])
 
             with ws_tabs[0]:
@@ -2067,6 +2067,97 @@ Be specific, data-driven, and actionable for a retail investor.
                 else:
                     st.info("Your watchlist is empty. Add stocks using the button above!")
 
+            # ==========================================
+            # 📰 NEWS FEED TAB (NEW - ws_tabs[12])
+            # ==========================================
+            with ws_tabs[12]:
+                st.markdown(f"### 📰 Latest News & Alerts: **{sym}**")
+                
+                import urllib.request
+                import urllib.parse
+                import xml.etree.ElementTree as ET
+                import datetime
+                import email.utils
+
+                def get_time_ago_tab(pubdate_str):
+                    try:
+                        dt = email.utils.parsedate_to_datetime(pubdate_str)
+                        now = datetime.datetime.now(datetime.timezone.utc)
+                        diff = now - dt
+                        seconds = diff.total_seconds()
+                        
+                        # Highly specific time formatting for "Today's" priority
+                        if seconds < 0: return "Just now"
+                        if seconds < 60: return f"{int(seconds)} secs ago"
+                        if seconds < 3600: 
+                            mins = int(seconds / 60)
+                            return f"{mins} min{'s' if mins != 1 else ''} ago"
+                        if seconds < 86400: 
+                            hours = int(seconds / 3600)
+                            return f"{hours} hour{'s' if hours != 1 else ''} ago"
+                        if seconds < 172800: return "Yesterday"
+                        
+                        days = int(seconds / 86400)
+                        return f"{days} days ago"
+                    except Exception:
+                        return "Recent"
+
+                @st.cache_data(ttl=600)
+                def fetch_single_stock_news(target_symbol, limit=10):
+                    try:
+                        # Broad search to ensure NO news is missed
+                        query = urllib.parse.quote(f'"{target_symbol}" stock share news NSE India')
+                        url = f"https://news.google.com/rss/search?q={query}&hl=en-IN&gl=IN&ceid=IN:en"
+                        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+                        
+                        with urllib.request.urlopen(req) as response:
+                            xml_data = response.read()
+                        root = ET.fromstring(xml_data)
+                        
+                        alert_keywords = ["52 week high", "52-week high", "52 week low", "52-week low", "upper circuit", "lower circuit", "hits circuit", "locked in circuit"]
+                        n_list = []
+                        
+                        for item in root.findall('.//item'):
+                            title = item.find('title').text
+                            link = item.find('link').text
+                            pub_date = item.find('pubDate').text if item.find('pubDate') is not None else ""
+                            
+                            is_alert = any(k in title.lower() for k in alert_keywords)
+                            icon = "🚨 **[ALERT]** " if is_alert else ""
+                            
+                            try:
+                                dt = email.utils.parsedate_to_datetime(pub_date)
+                            except Exception:
+                                dt = datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)
+                                
+                            n_list.append({
+                                "display_title": f"{icon}{title}", 
+                                "link": link, 
+                                "time_ago": get_time_ago_tab(pub_date),
+                                "timestamp": dt
+                            })
+                            
+                        # STRICT SORT: Forces 1 min, 5 min, 1 hr to ALWAYS be at the top
+                        n_list.sort(key=lambda x: x["timestamp"], reverse=True)
+                        return n_list[:limit]
+                    except Exception:
+                        return []
+
+                with st.spinner(f"Fetching today's latest news for {sym}..."):
+                    stock_news = fetch_single_stock_news(sym, limit=10) 
+                    
+                    if stock_news:
+                        for news in stock_news:
+                            # Visually highlight news that happened within the last 24 hours
+                            is_today = "min" in news['time_ago'] or "hour" in news['time_ago'] or "sec" in news['time_ago'] or "Just now" in news['time_ago']
+                            time_color = "#16e37f" if is_today else "gray"
+                            time_weight = "bold" if is_today else "normal"
+                            
+                            st.markdown(f"- <a href='{news['link']}' target='_blank' style='text-decoration: none; color: inherit;'>{news['display_title']}</a> <span style='color: {time_color}; font-weight: {time_weight}; font-size: 0.85em;'>— 🕒 {news['time_ago']}</span>", unsafe_allow_html=True)
+                            st.markdown("<hr style='margin: 0.5em 0; opacity: 0.2;'>", unsafe_allow_html=True)
+                    else:
+                        st.info(f"No recent news found for {sym}.")
+
     # ==========================================
     # 🌍 NATIONAL ANALYTICS PORTAL WORKSPACE
     # ==========================================
@@ -2419,8 +2510,10 @@ Be specific, data-driven, and actionable for a retail investor.
             cmp_v = clean_r.get(cmp_target, "") if cmp_target else ""
             sector_col = next((c for c in actual_cols if "sector" in c.lower()), None)
             sector_v = clean_r.get(sector_col, "") if sector_col else ""
+            nse_chart_url = f"https://charting.nseindia.com/?symbol={ticker}-EQ"
+            symbol_link = f'<a href="{nse_chart_url}" target="_blank" style="text-decoration:none; color:#000000; font-weight:bold;">{ticker}</a>'
             bf_results.append({
-                "Symbol": ticker,
+                "Symbol": symbol_link,
                 "Score": bf_s,
                 "Grade": bf_g,
                 "CMP": cmp_v,
@@ -2429,7 +2522,7 @@ Be specific, data-driven, and actionable for a retail investor.
             })
 
     if bf_search:
-        bf_results = [r for r in bf_results if bf_search.upper() in r["Symbol"].upper()]
+        bf_results = [r for r in bf_results if bf_search.upper() in re.sub(r'<[^>]*>', '', r["Symbol"]).upper()]
 
     bf_results.sort(key=lambda x: x["Score"], reverse=(bf_sort == "Score (High→Low)"))
 
@@ -2465,6 +2558,8 @@ Be specific, data-driven, and actionable for a retail investor.
             pinned = "left" if col == "Symbol" else None
             if col == "Score":
                 bf_gb.configure_column(col, width=dyn_w, pinned=pinned, cellStyle=bf_score_style)
+            elif col == "Symbol":
+                bf_gb.configure_column(col, width=dyn_w, pinned=pinned, cellRenderer=html_renderer)
             else:
                 bf_gb.configure_column(col, width=dyn_w, pinned=pinned)
 
@@ -2476,9 +2571,9 @@ Be specific, data-driven, and actionable for a retail investor.
         # Export BF Scanner results
         bf_buffer = io.BytesIO()
         with pd.ExcelWriter(bf_buffer, engine='openpyxl') as writer:
-            bf_scan_df.to_excel(writer, index=False, sheet_name="Bottom Fishing")
+            clean_for_export(bf_scan_df).to_excel(writer, index=False, sheet_name="Bottom Fishing")
         st.download_button("📥 Download BF Scanner Results", data=bf_buffer.getvalue(),
-            file_name=f"BottomFishing_{datetime.now().strftime('%Y%m%d')}.xlsx",
+            file_name=f"BottomFishing_{pd.Timestamp.now().strftime('%Y%m%d')}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     else:
         st.info(f"No stocks found with BF Score ≥ {min_bf_score}. Try lowering the minimum score.")
@@ -2498,21 +2593,64 @@ Be specific, data-driven, and actionable for a retail investor.
         colA, colB = st.columns(2)
 
         with colA:
-            st.markdown("#### ⬆️ Top 10 (Daily)")
+            # Embedding the header directly in HTML with 0 top margin removes the gap completely
+            top_html = "<h4 style='margin-top:0px; margin-bottom:8px;'>⬆️ Top 10 (Daily)</h4>"
             for _, row in top_10.iterrows():
                 clean_s = str(row.get('_raw_symbol_', '')).strip()
                 v = row[pct_target]
+                
+                # Extract CMP and mathematically calculate the absolute Rupee change
+                cmp_val = row.get(cmp_target, "") if cmp_target else ""
+                try:
+                    price_float = float(str(cmp_val).replace(',', '').strip())
+                    pct_float = float(v)
+                    
+                    # Calculate old price to find the exact rupee difference
+                    prev_price = price_float / (1 + (pct_float / 100))
+                    abs_change = price_float - prev_price
+                    
+                    # Formatting strings (adding a plus sign for positive changes)
+                    change_str = f"<span style='font-size: 0.85em; opacity: 0.75; margin-right: 6px;'>+{abs_change:,.2f}</span>"
+                    price_str = f"₹{price_float:,.2f}"
+                except:
+                    price_str = f"₹{cmp_val}"
+                    change_str = ""
+                
                 url = f"https://charting.nseindia.com/?symbol={clean_s}-EQ"
-                st.markdown(f"<a href='{url}' target='_blank' style='text-decoration:none;'><div style='background-color:#16e37f; padding:8px; margin:4px; border-radius:5px; color:#000000; font-weight:bold;'>{clean_s}: +{v}%</div></a>", unsafe_allow_html=True)
+                
+                top_html += f"<a href='{url}' target='_blank' style='text-decoration:none;'><div style='background-color:#16e37f; padding:6px 12px; margin-bottom:4px; border-radius:5px; color:#000000; font-weight:bold; display:flex; justify-content:space-between;'><span>{clean_s}: +{v}%</span><span>{change_str}{price_str}</span></div></a>"
+                
+            st.markdown(top_html, unsafe_allow_html=True)
 
         with colB:
-            st.markdown("#### ⬇️ Bottom 10 (Daily)")
+            # Embedding the header directly in HTML with 0 top margin removes the gap completely
+            bot_html = "<h4 style='margin-top:0px; margin-bottom:8px;'>⬇️ Bottom 10 (Daily)</h4>"
             for _, row in bottom_10.iterrows():
                 clean_s = str(row.get('_raw_symbol_', '')).strip()
                 v = row[pct_target]
+                
+                # Extract CMP and mathematically calculate the absolute Rupee change
+                cmp_val = row.get(cmp_target, "") if cmp_target else ""
+                try:
+                    price_float = float(str(cmp_val).replace(',', '').strip())
+                    pct_float = float(v)
+                    
+                    # Calculate old price to find the exact rupee difference
+                    prev_price = price_float / (1 + (pct_float / 100))
+                    abs_change = price_float - prev_price
+                    
+                    # Formatting strings (negative values automatically get a minus sign)
+                    change_str = f"<span style='font-size: 0.85em; opacity: 0.75; margin-right: 6px;'>{abs_change:,.2f}</span>"
+                    price_str = f"₹{price_float:,.2f}"
+                except:
+                    price_str = f"₹{cmp_val}"
+                    change_str = ""
+                
                 url = f"https://charting.nseindia.com/?symbol={clean_s}-EQ"
-                st.markdown(f"<a href='{url}' target='_blank' style='text-decoration:none;'><div style='background-color:#f39991; padding:8px; margin:4px; border-radius:5px; color:#000000; font-weight:bold;'>{clean_s}: {v}%</div></a>", unsafe_allow_html=True)
-
+                
+                bot_html += f"<a href='{url}' target='_blank' style='text-decoration:none;'><div style='background-color:#f39991; padding:6px 12px; margin-bottom:4px; border-radius:5px; color:#000000; font-weight:bold; display:flex; justify-content:space-between;'><span>{clean_s}: {v}%</span><span>{change_str}{price_str}</span></div></a>"
+                
+            st.markdown(bot_html, unsafe_allow_html=True)
 
     # ==========================================
     # 📰 GLOBAL NEWS ENGINE (6 TABS)
