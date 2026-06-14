@@ -379,12 +379,15 @@ def process_hyperlinks(df, symbol_col):
 
         for col in df_proc.columns:
             if col.startswith("_bg_") or col.startswith("_txt_") or col == "_raw_symbol_": continue
+c_lower = col.lower()
+                    url, label = None, "🔗 Link"
 
-            c_lower = col.lower()
-            url, label = None, "🔗 Link"
-
-            if "trading view" in c_lower: url, label = f"https://www.tradingview.com/symbols/{sym}/", f"Tre {sym}" if not c_lower.endswith("1") else "🔗 Link"
-            elif "history data" in c_lower: url, label = f"https://www.equitypandit.com/historical-data/{sym}", f"History {sym}" if not c_lower.endswith("1") else "🔗 Link"
+                    # 👇 ADDED LOGIC FOR SYMBOL COLUMN 👇
+                    if col == symbol_col: 
+                        url, label = f"https://charting.nseindia.com/?symbol={sym}-EQ", sym
+                    # -----------------------------------
+                    elif "trading view" in c_lower: url, label = f"https://www.tradingview.com/symbols/{sym}/", f"Tre {sym}" if not c_lower.endswith("1") else "🔗 Link"
+                    elif "history data" in c_lower: url, label = f"https://www.equitypandit.com/historical-data/{sym}", f"History {sym}" if not c_lower.endswith("1") else "🔗 Link"
             elif "screener" in c_lower: url, label = f"https://www.screener.in/company/{sym}", f"Scr {sym}" if not c_lower.endswith("1") else "🔗 Link"
             elif "zerodha" in c_lower: url, label = f"https://zerodha.com/markets/stocks/NSE/{sym}", f"🪁 {sym}" if not c_lower.endswith("1") else "🔗 Link"
             elif "chartlink" in c_lower: url, label = f"https://chartink.com/stocks-new?load-snapshot=exponential-moving-average-simple-moving-average-simple-moving-average-moving-average-convergence-divergence-chart-snapshot-175&symbol={sym}", f"CL {sym}" if not c_lower.endswith("1") else "🔗 Link"
