@@ -1153,40 +1153,6 @@ if not raw_df.empty:
     final_df = process_hyperlinks(raw_df, selected_symbol_col)
     filtered_df = final_df.copy()
 
-# ==========================================
-    # 🚀 ADDED: DELIVERY PERCENTAGE CALCULATION
-    # ==========================================
-    # 1. Dynamically find the correct columns in your sheet (expanded keywords)
-    traded_qty_col = next((c for c in actual_cols if any(k in c.lower() for k in ['traded qty', 'traded quantity', 'volume', 'tottrdqty'])), None)
-    delivery_qty_col = next((c for c in actual_cols if any(k in c.lower() for k in ['deliverable qty', 'delivery qty', 'deliverable quantity', 'delivery volume', 'deliverable'])), None)
-
-    # 2. If both columns exist, do the math
-    if traded_qty_col and delivery_qty_col:
-        new_col_name = "Delivery %"
-        
-        # Clean commas/percentages and convert to numbers
-        traded_series = pd.to_numeric(filtered_df[traded_qty_col].astype(str).str.replace(r'[%,]', '', regex=True), errors='coerce').fillna(0)
-        delivery_series = pd.to_numeric(filtered_df[delivery_qty_col].astype(str).str.replace(r'[%,]', '', regex=True), errors='coerce').fillna(0)
-        
-        # Calculate (Delivery / Traded) * 100, avoiding division by zero
-        filtered_df[new_col_name] = np.where(traded_series > 0, (delivery_series / traded_series) * 100, 0.0)
-        filtered_df[new_col_name] = filtered_df[new_col_name].round(2)
-        
-        # 3. Add default styling columns so it works seamlessly with your AgGrid color logic
-        filtered_df[f"_bg_{new_col_name}"] = "#ffffff"
-        filtered_df[f"_txt_{new_col_name}"] = "#000000"
-        
-        # 4. Register the new column
-        if new_col_name not in actual_cols:
-            actual_cols.append(new_col_name)
-            
-        st.success(f"✅ Delivery % successfully calculated using '{delivery_qty_col}' and '{traded_qty_col}'")
-            
-    else:
-        # 5. If it fails, print a loud error to the dashboard so we know what is missing!
-        st.error(f"⚠️ Could not calculate Delivery %. \n\nFound Traded Column: **{traded_qty_col}** \n\nFound Delivery Column: **{delivery_qty_col}** \n\nPlease ensure your Google Sheet has columns with these keywords.")
-    # ==========================================
-
     if search_query:
         mask = filtered_df[actual_cols].astype(str).apply(lambda x: x.str.contains(search_query, case=False, na=False)).any(axis=1)
         filtered_df = filtered_df[mask]
