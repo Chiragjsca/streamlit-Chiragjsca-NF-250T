@@ -636,7 +636,10 @@ def get_ranked_sheet_data():
     
     sym_col = next((c for c in actual_cols if c.lower() in ["nse code", "symbol", "ticker", "stock symbol", "id", "stock"]), None)
     cmp_col = next((c for c in actual_cols if "cmp" in c.lower()), None)
-    pct_col = next((c for c in actual_cols if "price %" in c.lower() or "change" in c.lower()), None)
+    
+    # 👇 UPDATED: Stricter parsing to prioritize the True Percentage column over Absolute Change
+    pct_col = next((c for c in actual_cols if "%" in c or "pct" in c.lower() or "percent" in c.lower()), None)
+    
     vol_col = next((c for c in actual_cols if "volume" in c.lower()), None)
     
     # Look for specific Value and Turnover columns
