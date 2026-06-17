@@ -543,7 +543,7 @@ st.write("---")
 @st.cache_data(ttl=300)
 def get_sheet_stocks_data():
     # Fetching strictly from the requested tab
-    df = load_sheet_data_with_colors("Top 250 Stocks")
+    df = load_sheet_data_with_colors("NSE Price Data")
     data_grid = {}
     
     if df.empty:
@@ -615,7 +615,7 @@ sheet_cards_html += "</div>"
 with st.expander("📈 Click to view Top 250 Stocks Matrix", expanded=False):
     # Failsafe if the sheet is completely empty or all rows returned "No Data"
     if sheet_valid_cards_count == 0:
-        st.info("Stock matrix data is currently unavailable. Please check the 'Top 250 Stocks' sheet.")
+        st.info("Stock matrix data is currently unavailable. Please check the 'NSE Price Data' sheet.")
     else:
         st.markdown(sheet_cards_html, unsafe_allow_html=True)
 
