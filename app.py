@@ -554,7 +554,9 @@ def get_sheet_stocks_data():
     # Dynamically find the symbol, cmp, and % change columns
     sym_col = next((c for c in actual_cols if c.lower() in ["nse code", "symbol", "ticker", "stock symbol", "id", "stock"]), None)
     cmp_col = next((c for c in actual_cols if "cmp" in c.lower()), None)
-    pct_col = next((c for c in actual_cols if "price %" in c.lower() or "change" in c.lower()), None)
+    
+    # 👇 UPDATED: Stricter check to guarantee we get the Percentage column, not Absolute Change
+    pct_col = next((c for c in actual_cols if "%" in c or "pct" in c.lower() or "percent" in c.lower()), None)
     
     if not sym_col or not cmp_col:
         return data_grid
@@ -593,7 +595,7 @@ sheet_valid_cards_count = 0
 
 for name, info in sheet_live_data.items():
     
-    # 👇 LOGIC: Hide HTML box entirely if the price is bad
+    # Hide HTML box entirely if the price is bad
     if info["price"] in ["No Data", "Loading...", "Error"]:
         continue
         
