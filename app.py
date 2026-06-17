@@ -1487,109 +1487,117 @@ if not raw_df.empty:
         key="primary_stock_table_grid"
     )
 
-    # ==========================================
-    # 🎯 SELECTION WORKSPACE (LINKS + EMBED PANELS)
-    # ==========================================
-    selected_rows = grid_response.get("selected_rows", [])
-    if selected_rows is not None and len(selected_rows) > 0:
-        sel_row = selected_rows.iloc[0] if isinstance(selected_rows, pd.DataFrame) else selected_rows[0]
-        sym = str(sel_row.get("_raw_symbol_", "")).strip()
+            # ==========================================
+            # 🎯 SELECTION WORKSPACE (LINKS + EMBED PANELS)
+            # ==========================================
+            selected_rows = grid_response.get("selected_rows", [])
+            if selected_rows is not None and len(selected_rows) > 0:
+                sel_row = selected_rows.iloc[0] if isinstance(selected_rows, pd.DataFrame) else selected_rows[0]
+                sym = str(sel_row.get("_raw_symbol_", "")).strip()
 
-        if sym:
-            with url_placeholder.container():
-                st.markdown(
-                    f"**⚡ {sym} Links:** "
-                    f"[Trading View (🔗)](https://www.tradingview.com/symbols/{sym}/) &nbsp;|&nbsp; "
-                    f"[History Data (🔗)](https://www.equitypandit.com/historical-data/{sym}) &nbsp;|&nbsp; "
-                    f"[Screener (🔗)](https://www.screener.in/company/{sym}) &nbsp;|&nbsp; "
-                    f"[Zerodha (🔗)](https://zerodha.com/markets/stocks/NSE/{sym}) &nbsp;|&nbsp; "
-                    f"[Chartlink (🔗)](https://chartink.com/stocks-new?load-snapshot=exponential-moving-average-simple-moving-average-simple-moving-average-moving-average-convergence-divergence-chart-snapshot-175&symbol={sym}) &nbsp;|&nbsp; "
-                    f"[Market Smith (🔗)](https://marketsmithindia.com/mstool/eval/{sym}/evaluation.jsp) &nbsp;|&nbsp; "
-                    f"[NSE URL (🔗)](https://www.nseindia.com/get-quotes/equity?symbol={sym})"
-                )
+                if sym:
+                    with url_placeholder.container():
+                        st.markdown(
+                            f"**⚡ {sym} Links:** "
+                            f"[Trading View (🔗)](https://www.tradingview.com/symbols/{sym}/) &nbsp;|&nbsp; "
+                            f"[History Data (🔗)](https://www.equitypandit.com/historical-data/{sym}) &nbsp;|&nbsp; "
+                            f"[Screener (🔗)](https://www.screener.in/company/{sym}) &nbsp;|&nbsp; "
+                            f"[Zerodha (🔗)](https://zerodha.com/markets/stocks/NSE/{sym}) &nbsp;|&nbsp; "
+                            f"[Chartlink (🔗)](https://chartink.com/stocks-new?load-snapshot=exponential-moving-average-simple-moving-average-simple-moving-average-moving-average-convergence-divergence-chart-snapshot-175&symbol={sym}) &nbsp;|&nbsp; "
+                            f"[Market Smith (🔗)](https://marketsmithindia.com/mstool/eval/{sym}/evaluation.jsp) &nbsp;|&nbsp; "
+                            f"[NSE URL (🔗)](https://www.nseindia.com/get-quotes/equity?symbol={sym})"
+                        )
 
-            st.markdown(f"---")
-            st.subheader(f"🛠️ Live Workspace Panel: {sym}")
-            box_height = st.slider("📏 Adjust Panel Box Height (px):", min_value=300, max_value=1000, value=500, step=50, key="panel_height_slider")
+                    st.markdown(f"---")
+                    st.subheader(f"🛠️ Live Workspace Panel: {sym}")
+                    box_height = st.slider("📏 Adjust Panel Box Height (px):", min_value=300, max_value=1000, value=600, step=50, key="panel_height_slider")
 
-            ws_tabs = st.tabs([
-                "📈 Chart & Trade Info (NSE Component)", "📋 History Data (EquityPandit)",
-                "🎯 Bullish/Bearish Zone", "📁 Screener Documents",
-                "🪁 Zerodha Portal", "📊 MarketSmith India", "📉 TradingView Symbol Profile",
-                "🤖 AI Stock Analysis", "💻 AI Pine Script Builder",
-                "🔬 Bottom Fishing Score",
-                "🎯 GTT Order Calculator", "📊 Watchlist Manager", "📰 News Feed"
-            ])
+                    ws_tabs = st.tabs([
+                        "📉 Live TradingView Chart", "📋 External Resources",
+                        "🤖 AI Stock Analysis", "💻 AI Pine Script Builder",
+                        "🔬 Bottom Fishing Score", "🎯 GTT Order Calculator", 
+                        "📊 Watchlist Manager", "📰 News Feed"
+                    ])
 
-            with ws_tabs[0]:
-                _url0 = f"https://charting.nseindia.com/?symbol={sym}-EQ"
-                st.markdown(f"**NSE Interactive Chart Frame** &nbsp;|&nbsp; [🌐 Open in Browser]({_url0})", unsafe_allow_html=False)
-                st.caption("📱 If frame is blank on mobile, tap the link above to open directly.")
-                components.html(f'<iframe src="{_url0}" width="100%" height="{box_height}" style="border:none; border-radius:5px;"></iframe>', height=box_height+20)
+                    # 1. TRADINGVIEW OFFICIAL WIDGET (This one WILL work!)
+                    with ws_tabs[0]:
+                        st.markdown(f"**Interactive TradingView Chart** for NSE:{sym}")
+                        
+                        # We use TradingView's official JS Widget to bypass the iframe blocks
+                        tv_widget_html = f"""
+                        <div class="tradingview-widget-container" style="height:{box_height}px;width:100%">
+                          <div id="tradingview_{sym}" style="height:calc(100% - 32px);width:100%"></div>
+                          <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+                          <script type="text/javascript">
+                          new TradingView.widget(
+                          {{
+                          "autosize": true,
+                          "symbol": "NSE:{sym}",
+                          "interval": "D",
+                          "timezone": "Asia/Kolkata",
+                          "theme": "light",
+                          "style": "1",
+                          "locale": "in",
+                          "enable_publishing": false,
+                          "hide_top_toolbar": false,
+                          "hide_legend": false,
+                          "save_image": false,
+                          "container_id": "tradingview_{sym}"
+                        }}
+                          );
+                          </script>
+                        </div>
+                        """
+                        components.html(tv_widget_html, height=box_height)
 
-            with ws_tabs[1]:
-                _url1 = f"https://www.equitypandit.com/historical-data/{sym.lower()}"
-                st.markdown(f"**EquityPandit Historical Matrix Data** &nbsp;|&nbsp; [🌐 Open in Browser]({_url1})")
-                st.caption("📱 If frame is blank on mobile, tap the link above to open directly.")
-                components.html(f'<iframe src="{_url1}" width="100%" height="{box_height}" style="border:none; border-radius:5px; background-color:white;"></iframe>', height=box_height+20)
+                    # 2. EXTERNAL RESOURCES (Removed broken iframes, kept clean buttons)
+                    with ws_tabs[1]:
+                        st.info("🔒 Note: Major financial platforms block third-party embedding for security reasons. Please use the direct links below to access their deep analytics.")
+                        
+                        _url0 = f"https://charting.nseindia.com/?symbol={sym}-EQ"
+                        _url1 = f"https://www.equitypandit.com/historical-data/{sym.lower()}"
+                        _url2 = f"https://www.equitypandit.com/share-price/{sym.lower()}#chart"
+                        _url3 = f"https://www.screener.in/company/{sym}/consolidated/"
+                        _url4 = f"https://zerodha.com/markets/stocks/NSE/{sym}/"
+                        _url5 = f"https://marketsmithindia.com/mstool/eval/{sym.lower()}/evaluation.jsp"
 
-            with ws_tabs[2]:
-                _url2 = f"https://www.equitypandit.com/share-price/{sym.lower()}#chart"
-                st.markdown(f"**Bullish / Bearish Zone Indicator** &nbsp;|&nbsp; [🌐 Open in Browser]({_url2})")
-                st.caption("📱 If frame is blank on mobile, tap the link above to open directly.")
-                components.html(f'<iframe src="{_url2}" width="100%" height="{box_height}" style="border:none; border-radius:5px; background-color:white;"></iframe>', height=box_height+20)
+                        st.markdown(f"""
+                        * 📈 [Open **NSE Interactive Chart**]({_url0})
+                        * 📊 [Open **Screener Corporate Filings**]({_url3})
+                        * 🪁 [Open **Zerodha Financial Metrics**]({_url4})
+                        * 📋 [Open **EquityPandit Historical Data**]({_url1})
+                        * 🎯 [Open **Bullish/Bearish Zone**]({_url2})
+                        * 💎 [Open **MarketSmith Evaluation**]({_url5})
+                        """)
 
-            with ws_tabs[3]:
-                _url3 = f"https://www.screener.in/company/{sym}/consolidated/"
-                st.markdown(f"**Screener Corporate Filings** &nbsp;|&nbsp; [🌐 Open in Browser]({_url3})")
-                st.caption("📱 If frame is blank on mobile, tap the link above to open directly.")
-                components.html(f'<iframe src="{_url3}" width="100%" height="{box_height}" style="border:none; border-radius:5px; background-color:white;"></iframe>', height=box_height+20)
+                    # 3. AI STOCK ANALYSIS
+                    with ws_tabs[2]:
+                        st.markdown(f"### 🤖 Ask AI About **{sym}**")
 
-            with ws_tabs[4]:
-                _url4 = f"https://zerodha.com/markets/stocks/NSE/{sym}/"
-                st.markdown(f"**Zerodha Markets Financial Performance Metrics** &nbsp;|&nbsp; [🌐 Open in Browser]({_url4})")
-                st.caption("📱 If frame is blank on mobile, tap the link above to open directly.")
-                components.html(f'<iframe src="{_url4}" width="100%" height="{box_height}" style="border:none; border-radius:5px; background-color:white;"></iframe>', height=box_height+20)
+                        if not ai_enabled:
+                            st.warning("⚠️ No AI configured. Add `GEMINI_API_KEY` or `GROQ_API_KEY` to Streamlit secrets.")
+                        else:
+                            # ── Model selector ──────────────────────────────────────
+                            chosen_model = ai_model_selector("analysis")
+                            st.caption(
+                                "⚡ Groq = llama-3.3-70b (free, fast) &nbsp;|&nbsp; 🧠 Gemini = gemini-2.5-flash"
+                                if groq_enabled and gemini_enabled
+                                else ("⚡ Groq connected" if groq_enabled else "🧠 Gemini connected")
+                            )
+                            st.write("Using the live data pulled from your dashboard, the AI can analyze technicals, ranges, and context.")
 
-            with ws_tabs[5]:
-                _url5 = f"https://marketsmithindia.com/mstool/eval/{sym.lower()}/evaluation.jsp"
-                st.markdown(f"**MarketSmith India Institutional Trading Evaluation Engine** &nbsp;|&nbsp; [🌐 Open in Browser]({_url5})")
-                st.caption("📱 If frame is blank on mobile, tap the link above to open directly.")
-                components.html(f'<iframe src="{_url5}" width="100%" height="{box_height}" style="border:none; border-radius:5px; background-color:white;"></iframe>', height=box_height+20)
+                            ai_query = st.text_area(
+                                "Your Query:",
+                                value=f"Based on the current data provided, give me a quick summary of the technical performance and trend for {sym}.",
+                                height=80,
+                                key="ai_query_analysis"
+                            )
 
-            with ws_tabs[6]:
-                _url6 = f"https://www.tradingview.com/symbols/{sym}/"
-                st.markdown(f"**TradingView Comprehensive Asset Market Registry Summary Profile** &nbsp;|&nbsp; [🌐 Open in Browser]({_url6})")
-                st.caption("📱 If frame is blank on mobile, tap the link above to open directly.")
-                components.html(f'<iframe src="{_url6}" width="100%" height="{box_height}" style="border:none; border-radius:5px; background-color:white;"></iframe>', height=box_height+20)
-
-            with ws_tabs[7]:
-                st.markdown(f"### 🤖 Ask AI About **{sym}**")
-
-                if not ai_enabled:
-                    st.warning("⚠️ No AI configured. Add `GEMINI_API_KEY` or `GROQ_API_KEY` to Streamlit secrets.")
-                else:
-                    # ── Model selector ──────────────────────────────────────
-                    chosen_model = ai_model_selector("analysis")
-                    st.caption(
-                        "⚡ Groq = llama-3.3-70b (free, fast) &nbsp;|&nbsp; 🧠 Gemini = gemini-2.5-flash"
-                        if groq_enabled and gemini_enabled
-                        else ("⚡ Groq connected" if groq_enabled else "🧠 Gemini connected")
-                    )
-                    st.write("Using the live data pulled from your dashboard, the AI can analyze technicals, ranges, and context.")
-
-                    ai_query = st.text_area(
-                        "Your Query:",
-                        value=f"Based on the current data provided, give me a quick summary of the technical performance and trend for {sym}.",
-                        height=80,
-                        key="ai_query_analysis"
-                    )
-
-                    if st.button("✨ Generate AI Analysis", use_container_width=True, key="btn_ai_analysis"):
-                        with st.spinner(f"Analyzing {sym} with {chosen_model}..."):
-                            try:
-                                clean_row_context = {k: v for k, v in sel_row.items() if not str(k).startswith('_')}
-                                prompt = f"""
+                            if st.button("✨ Generate AI Analysis", use_container_width=True, key="btn_ai_analysis"):
+                                with st.spinner(f"Analyzing {sym} with {chosen_model}..."):
+                                    try:
+                                        clean_row_context = {k: v for k, v in sel_row.items() if not str(k).startswith('_')}
+                                        prompt = f"""
 You are a professional stock market analyst evaluating Indian NSE stocks.
 The user is asking about the stock: {sym}.
 
@@ -1600,97 +1608,98 @@ User Query: {ai_query}
 
 Please provide a clear, concise, and professional response.
 """
-                                ai_result = call_ai(prompt, chosen_model)
-                                st.session_state["last_ai_result"] = {"sym": sym, "model": chosen_model, "query": ai_query, "result": ai_result}
-                                # Save to history
-                                st.session_state.ai_history.append([
-                                    sym, chosen_model, ai_query, ai_result,
-                                    datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                                ])
-                                st.info(ai_result)
-                            except Exception as e:
-                                st.error(f"AI error: {e}")
+                                        ai_result = call_ai(prompt, chosen_model)
+                                        st.session_state["last_ai_result"] = {"sym": sym, "model": chosen_model, "query": ai_query, "result": ai_result}
+                                        # Save to history
+                                        st.session_state.ai_history.append([
+                                            sym, chosen_model, ai_query, ai_result,
+                                            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                        ])
+                                        st.info(ai_result)
+                                    except Exception as e:
+                                        st.error(f"AI error: {e}")
 
-                    # ── Show export & share buttons if result exists ────────
-                    if st.session_state.get("last_ai_result", {}).get("sym") == sym:
-                        _last = st.session_state["last_ai_result"]
-                        _res_text = _last["result"]
+                        # ── Show export & share buttons if result exists ────────
+                        if st.session_state.get("last_ai_result", {}).get("sym") == sym:
+                            _last = st.session_state["last_ai_result"]
+                            _res_text = _last["result"]
+
+                            st.markdown("---")
+                            _ec1, _ec2, _ec3 = st.columns(3)
+
+                            # Excel download (single result)
+                            with _ec1:
+                                _single_xl = ai_results_to_excel([[
+                                    sym, _last["model"], _last["query"], _res_text,
+                                    datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                ]])
+                                st.download_button(
+                                    "📥 Save as Excel",
+                                    data=_single_xl,
+                                    file_name=f"AI_{sym}_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx",
+                                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                    use_container_width=True,
+                                    key="dl_ai_excel_analysis"
+                                )
+
+                            # WhatsApp share
+                            with _ec2:
+                                _wa_text = urllib.parse.quote(
+                                    f"📊 *{sym} AI Analysis* ({_last['model']})\n\n{_res_text[:800]}"
+                                    + ("\n\n_(truncated)_" if len(_res_text) > 800 else "")
+                                )
+                                st.markdown(
+                                    f"<a href='https://wa.me/?text={_wa_text}' target='_blank'>"
+                                    f"<button style='width:100%;padding:8px;background:#25D366;color:white;"
+                                    f"border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:bold;'>"
+                                    f"📱 Share on WhatsApp</button></a>",
+                                    unsafe_allow_html=True
+                                )
+
+                            # Telegram share
+                            with _ec3:
+                                _tg_text = urllib.parse.quote(
+                                    f"📊 {sym} AI Analysis ({_last['model']})\n\n{_res_text[:800]}"
+                                )
+                                st.markdown(
+                                    f"<a href='https://t.me/share/url?url=NSEDashboard&text={_tg_text}' target='_blank'>"
+                                    f"<button style='width:100%;padding:8px;background:#229ED9;color:white;"
+                                    f"border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:bold;'>"
+                                    f"✈️ Share on Telegram</button></a>",
+                                    unsafe_allow_html=True
+                                )
 
                         st.markdown("---")
-                        _ec1, _ec2, _ec3 = st.columns(3)
+                        st.markdown("**💡 Suggested Prompts** — copy any prompt below and paste it into the query box above:")
+                        prompt_lines = "\n".join(
+                            [f"{i+1}. {p.replace('{sym}', sym)}" for i, p in enumerate(SUGGESTED_AI_PROMPTS)]
+                        )
+                        st.text(prompt_lines)
 
-                        # Excel download (single result)
-                        with _ec1:
-                            _single_xl = ai_results_to_excel([[
-                                sym, _last["model"], _last["query"], _res_text,
-                                datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                            ]])
-                            st.download_button(
-                                "📥 Save as Excel",
-                                data=_single_xl,
-                                file_name=f"AI_{sym}_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx",
-                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                                use_container_width=True,
-                                key="dl_ai_excel_analysis"
-                            )
+                    # 4. AI PINE SCRIPT BUILDER
+                    with ws_tabs[3]:
+                        st.markdown(f"### 💻 AI Pine Script Generator for **{sym}**")
 
-                        # WhatsApp share
-                        with _ec2:
-                            _wa_text = urllib.parse.quote(
-                                f"📊 *{sym} AI Analysis* ({_last['model']})\n\n{_res_text[:800]}"
-                                + ("\n\n_(truncated)_" if len(_res_text) > 800 else "")
-                            )
-                            st.markdown(
-                                f"<a href='https://wa.me/?text={_wa_text}' target='_blank'>"
-                                f"<button style='width:100%;padding:8px;background:#25D366;color:white;"
-                                f"border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:bold;'>"
-                                f"📱 Share on WhatsApp</button></a>",
-                                unsafe_allow_html=True
-                            )
+                        if not ai_enabled:
+                            st.warning("⚠️ No AI configured. Add `GEMINI_API_KEY` or `GROQ_API_KEY` to Streamlit secrets.")
+                        else:
+                            chosen_model_pine = ai_model_selector("pine")
+                            st.write("Generate a custom TradingView Pine Script v5 strategy tailored to this stock's current metrics.")
 
-                        # Telegram share
-                        with _ec3:
-                            _tg_text = urllib.parse.quote(
-                                f"📊 {sym} AI Analysis ({_last['model']})\n\n{_res_text[:800]}"
-                            )
-                            st.markdown(
-                                f"<a href='https://t.me/share/url?url=NSEDashboard&text={_tg_text}' target='_blank'>"
-                                f"<button style='width:100%;padding:8px;background:#229ED9;color:white;"
-                                f"border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:bold;'>"
-                                f"✈️ Share on Telegram</button></a>",
-                                unsafe_allow_html=True
-                            )
+                            strategy_focus = st.selectbox("Select Strategy Focus:", [
+                                "Volume Breakout with Dynamic Stop Loss",
+                                "Moving Average Crossover (50/100/200 DMA)",
+                                "Trend Following with Trailing Stop",
+                                "Mean Reversion from 52W High/Low"
+                            ], key="pine_strategy_focus")
 
-                    st.markdown("---")
-                    st.markdown("**💡 Suggested Prompts** — copy any prompt below and paste it into the query box above:")
-                    prompt_lines = "\n".join(
-                        [f"{i+1}. {p.replace('{sym}', sym)}" for i, p in enumerate(SUGGESTED_AI_PROMPTS)]
-                    )
-                    st.text(prompt_lines)
+                            pine_query = st.text_area("Additional Custom Rules (Optional):", value=f"Include risk management parameters and plot signals on the chart.", height=60, key="pine_query")
 
-            with ws_tabs[8]:
-                st.markdown(f"### 💻 AI Pine Script Generator for **{sym}**")
-
-                if not ai_enabled:
-                    st.warning("⚠️ No AI configured. Add `GEMINI_API_KEY` or `GROQ_API_KEY` to Streamlit secrets.")
-                else:
-                    chosen_model_pine = ai_model_selector("pine")
-                    st.write("Generate a custom TradingView Pine Script v5 strategy tailored to this stock's current metrics.")
-
-                    strategy_focus = st.selectbox("Select Strategy Focus:", [
-                        "Volume Breakout with Dynamic Stop Loss",
-                        "Moving Average Crossover (50/100/200 DMA)",
-                        "Trend Following with Trailing Stop",
-                        "Mean Reversion from 52W High/Low"
-                    ], key="pine_strategy_focus")
-
-                    pine_query = st.text_area("Additional Custom Rules (Optional):", value=f"Include risk management parameters and plot signals on the chart.", height=60, key="pine_query")
-
-                    if st.button("⚙️ Generate TradingView Pine Script", use_container_width=True, key="btn_pine"):
-                        with st.spinner(f"Writing Pine Script v5 code for {sym}..."):
-                            try:
-                                clean_row_context = {k: v for k, v in sel_row.items() if not str(k).startswith('_')}
-                                prompt = f"""
+                            if st.button("⚙️ Generate TradingView Pine Script", use_container_width=True, key="btn_pine"):
+                                with st.spinner(f"Writing Pine Script v5 code for {sym}..."):
+                                    try:
+                                        clean_row_context = {k: v for k, v in sel_row.items() if not str(k).startswith('_')}
+                                        prompt = f"""
 You are an expert quantitative developer specializing in TradingView Pine Script v5.
 
 Write a complete, ready-to-copy Pine Script v5 strategy for the stock: {sym}.
@@ -1706,32 +1715,32 @@ Formatting Requirements:
 2. Include clear comments explaining the logic.
 3. Provide ONLY the Pine Script code inside a markdown code block, no other conversational text.
 """
-                                pine_result = call_ai(prompt, chosen_model_pine)
-                                st.session_state["last_pine_result"] = {"sym": sym, "result": pine_result}
-                                st.markdown("### 📋 Your Custom Strategy Code:")
-                                st.write("Copy the code below and paste it into the TradingView Pine Editor.")
-                                st.markdown(pine_result)
-                            except Exception as e:
-                                st.error(f"AI error: {e}")
+                                        pine_result = call_ai(prompt, chosen_model_pine)
+                                        st.session_state["last_pine_result"] = {"sym": sym, "result": pine_result}
+                                        st.markdown("### 📋 Your Custom Strategy Code:")
+                                        st.write("Copy the code below and paste it into the TradingView Pine Editor.")
+                                        st.markdown(pine_result)
+                                    except Exception as e:
+                                        st.error(f"AI error: {e}")
 
-                    # Excel download for pine script
-                    if st.session_state.get("last_pine_result", {}).get("sym") == sym:
-                        _pine_res = st.session_state["last_pine_result"]["result"]
-                        _pine_xl = ai_results_to_excel([[
-                            sym, "Pine Script", strategy_focus, _pine_res,
-                            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                        ]])
-                        st.download_button(
-                            "📥 Save Pine Script as Excel",
-                            data=_pine_xl,
-                            file_name=f"PineScript_{sym}_{datetime.now().strftime('%Y%m%d')}.xlsx",
-                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                            key="dl_pine_excel"
-                        )
+                            # Excel download for pine script
+                            if st.session_state.get("last_pine_result", {}).get("sym") == sym:
+                                _pine_res = st.session_state["last_pine_result"]["result"]
+                                _pine_xl = ai_results_to_excel([[
+                                    sym, "Pine Script", strategy_focus, _pine_res,
+                                    datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                                ]])
+                                st.download_button(
+                                    "📥 Save Pine Script as Excel",
+                                    data=_pine_xl,
+                                    file_name=f"PineScript_{sym}_{datetime.now().strftime('%Y%m%d')}.xlsx",
+                                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                    key="dl_pine_excel"
+                                )
 
-                    st.markdown("---")
-                    st.markdown("**📋 Custom Rules Reference** — copy any rule and paste it into the Additional Custom Rules box above:")
-                    st.text(PINE_CUSTOM_RULES)
+                        st.markdown("---")
+                        st.markdown("**📋 Custom Rules Reference** — copy any rule and paste it into the Additional Custom Rules box above:")
+                        st.text(PINE_CUSTOM_RULES)
 
             # ==========================================
             # 🔬 BOTTOM FISHING SCORE TAB (NEW!)
