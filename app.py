@@ -1483,7 +1483,11 @@ if not raw_df.empty:
 
     grid_response = AgGrid(
         filtered_df, gridOptions=grid_options, theme="streamlit", update_mode=GridUpdateMode.SELECTION_CHANGED,
-        allow_unsafe_jscode=True, fit_columns_on_grid_load=Fal    # ==========================================
+        allow_unsafe_jscode=True, fit_columns_on_grid_load=False, enable_enterprise_modules=False, height=400, width='100%',
+        key="primary_stock_table_grid"
+    )
+   
+    # ==========================================
     # 🎯 SELECTION WORKSPACE (LINKS + EMBED PANELS)
     # ==========================================
     selected_rows = grid_response.get("selected_rows", [])
