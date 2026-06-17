@@ -1146,7 +1146,7 @@ if not raw_df.empty:
             guess_idx = i
             break
 
-st.sidebar.markdown("---")
+    st.sidebar.markdown("---")
     st.sidebar.header("⚙️ Settings")
     selected_symbol_col = st.sidebar.selectbox("Symbol Column:", actual_cols, index=guess_idx, key="filter_symbol_col")
 
