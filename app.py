@@ -1146,12 +1146,40 @@ if not raw_df.empty:
             guess_idx = i
             break
 
-    st.sidebar.markdown("---")
+st.sidebar.markdown("---")
     st.sidebar.header("⚙️ Settings")
     selected_symbol_col = st.sidebar.selectbox("Symbol Column:", actual_cols, index=guess_idx, key="filter_symbol_col")
 
     final_df = process_hyperlinks(raw_df, selected_symbol_col)
     filtered_df = final_df.copy()
+
+    # ==========================================
+    # 🚀 ADDED: DELIVERY PERCENTAGE CALCULATION
+    # ==========================================
+    # 1. Dynamically find the correct columns in your sheet
+    traded_qty_col = next((c for c in actual_cols if any(k in c.lower() for k in ['traded qty', 'traded quantity', 'volume'])), None)
+    delivery_qty_col = next((c for c in actual_cols if any(k in c.lower() for k in ['deliverable qty', 'delivery qty', 'deliverable quantity', 'delivery volume', 'deliverable'])), None)
+
+    # 2. If both columns exist, do the math
+    if traded_qty_col and delivery_qty_col:
+        new_col_name = "Delivery %"
+        
+        # Clean commas/percentages and convert to numbers
+        traded_series = pd.to_numeric(filtered_df[traded_qty_col].astype(str).str.replace(r'[%,]', '', regex=True), errors='coerce').fillna(0)
+        delivery_series = pd.to_numeric(filtered_df[delivery_qty_col].astype(str).str.replace(r'[%,]', '', regex=True), errors='coerce').fillna(0)
+        
+        # Calculate (Delivery / Traded) * 100, avoiding division by zero
+        filtered_df[new_col_name] = np.where(traded_series > 0, (delivery_series / traded_series) * 100, 0.0)
+        filtered_df[new_col_name] = filtered_df[new_col_name].round(2)
+        
+        # 3. Add default styling columns so it works seamlessly with your AgGrid color logic
+        filtered_df[f"_bg_{new_col_name}"] = "#ffffff"
+        filtered_df[f"_txt_{new_col_name}"] = "#000000"
+        
+        # 4. Register the new column so the rest of the app displays it and filters it properly
+        if new_col_name not in actual_cols:
+            actual_cols.append(new_col_name)
+    # ==========================================
 
     if search_query:
         mask = filtered_df[actual_cols].astype(str).apply(lambda x: x.str.contains(search_query, case=False, na=False)).any(axis=1)
