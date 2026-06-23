@@ -220,6 +220,7 @@ HIDDEN_COLUMNS_BY_LETTER = {
     "NSE Price Data": [
         "AY", "AZ",
         "BA", "BB",
+        "CE", "CF", "CG", "CF", "CG", "CH", "CI", "CJ", "CK", "CL", "CM", "CN", "CO", "CP", "CQ", "CR", "CS", "CT", "CU", "CV", "CW", "CX", "CY", "CZ",
     ],
     "NSE Fundamentals": [],
     "Final List": [],
