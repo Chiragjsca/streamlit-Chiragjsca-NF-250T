@@ -186,13 +186,13 @@ text
 #      Letters are counted left-to-right exactly as in Google Sheets, so this also works for
 #      blank/empty-header columns that have no text to match on.
 #
-# sheet_names = ["Top 250 Stocks", "NSE Fundamentals", "Final List", "Final List 2", "Diff @ 200 DMA", "+%", "-%"]
+# sheet_names = ["NSE Price Data", "NSE Fundamentals", "Final List", "Final List 2", "Diff @ 200 DMA", "+%", "-%"]
 #
 # Add/edit a key for any sheet name above. A sheet with no key (or an empty list) shows all its columns.
 # To stop hiding something, just delete its line from the list below.
 
 HIDDEN_COLUMNS_BY_NAME = {
-    "Top 250 Stocks": [
+    "NSE Price Data": [
         "50 DMA",
         "100 DMA",
         "200 DMA",
@@ -217,7 +217,7 @@ HIDDEN_COLUMNS_BY_NAME = {
 # columns in the actual Google Sheet (no header text to hide them by name). Add more
 # letters for any sheet to hide other columns by position, or delete letters to unhide.
 HIDDEN_COLUMNS_BY_LETTER = {
-    "Top 250 Stocks": [
+    "NSE Price Data": [
         "E", "F", "G",
         "AA", "AB", "AC", "AD", "AE", "AF", "AG", "AH",
     ],
@@ -267,7 +267,7 @@ def get_hidden_columns(sheet_name: str, ordered_columns) -> set:
 # named "NSE Code", "Symbol", "Ticker", "Stock Symbol", "Id" or "Stock"). To force a
 # specific column instead, set the exact header text below.
 LOCKED_SYMBOL_COLUMN = {
-    "Top 250 Stocks": None,
+    "NSE Price Data": None,
     "NSE Fundamentals": None,
     "Final List": None,
     "Final List 2": None,
@@ -288,13 +288,13 @@ LOCKED_SYMBOL_COLUMN = {
 # then name-list). Any column you don't list keeps its original relative position and is simply
 # appended afterwards. The locked Symbol column is always placed first, ahead of this list.
 #
-# sheet_names = ["Top 250 Stocks", "NSE Fundamentals", "Final List", "Final List 2", "Diff @ 200 DMA", "+%", "-%"]
+# sheet_names = ["NSE Price Data", "NSE Fundamentals", "Final List", "Final List 2", "Diff @ 200 DMA", "+%", "-%"]
 #
 # Add/edit a key for any sheet name above. A sheet with no key (or two empty lists) keeps the
 # app's original automatic ordering for that sheet.
 
 COLUMN_ORDER_BY_NAME = {
-    "Top 250 Stocks": [
+    "NSE Price Data": [
         "Turnover",
         "% Delivery",
         "Close Price",
@@ -318,7 +318,7 @@ COLUMN_ORDER_BY_NAME = {
 # add letters for any other sheet, reorder them, or remove letters to drop them from priority
 # (a dropped column simply falls back to its normal position instead of disappearing).
 COLUMN_ORDER_BY_LETTER = {
-    "Top 250 Stocks": ["B", "C", "D", "L"],
+    "NSE Price Data": ["B", "C", "D", "L"],
     "NSE Fundamentals": [],
     "Final List": [],
     "Final List 2": [],
@@ -798,12 +798,12 @@ with st.expander("🏆 Click to view Full-Market India Rankings", expanded=False
 st.write("---")
 
 # ==========================================
-# 🏢 TOP 250 STOCKS TICKER (SHEET DATA GRID)
+# 🏢 NSE PRICE DATA STOCKS TICKER (SHEET DATA GRID)
 # ==========================================
 @st.cache_data(ttl=300)
 def get_sheet_stocks_data():
     # Fetching strictly from the requested tab
-    df = load_sheet_data_with_colors("Top 250 Stocks")
+    df = load_sheet_data_with_colors("NSE Price Data")
     data_grid = {}
     
     if df.empty:
@@ -872,21 +872,21 @@ for name, info in sheet_live_data.items():
 
 sheet_cards_html += "</div>"
 
-with st.expander("📈 Click to view Top 250 Stocks Matrix", expanded=False):
+with st.expander("📈 Click to view NSE Price Data Matrix", expanded=False):
     # Failsafe if the sheet is completely empty or all rows returned "No Data"
     if sheet_valid_cards_count == 0:
-        st.info("Stock matrix data is currently unavailable. Please check the 'Top 250 Stocks' sheet.")
+        st.info("Stock matrix data is currently unavailable. Please check the 'NSE Price Data' sheet.")
     else:
         st.markdown(sheet_cards_html, unsafe_allow_html=True)
 
 st.write("---")
 
 # ==========================================
-# 🏆 TOP 250 STOCKS RANKING DASHBOARDS
+# 🏆 NSE PRICE DATA RANKING DASHBOARDS
 # ==========================================
 @st.cache_data(ttl=300)
 def get_ranked_sheet_data():
-    df = load_sheet_data_with_colors("Top 250 Stocks")
+    df = load_sheet_data_with_colors("NSE Price Data")
     if df.empty:
         return pd.DataFrame()
         
@@ -984,9 +984,9 @@ def build_ranking_cards_html(dataframe, metric_label="change"):
 # Fetch Data
 rank_data = get_ranked_sheet_data()
 
-with st.expander("🏆 Click to view Advanced Ranking Dashboards (Top 250 Stocks)", expanded=False):
+with st.expander("🏆 Click to view Advanced Ranking Dashboards (NSE Price Data)", expanded=False):
     if rank_data.empty:
-        st.info("Ranking data is currently unavailable. Please check the 'Top 250 Stocks' sheet.")
+        st.info("Ranking data is currently unavailable. Please check the 'NSE Price Data' sheet.")
     else:
         # 1. Top 20 Gainers/Losers
         df_gainers = rank_data.nlargest(20, 'Pct_Change')
@@ -1392,7 +1392,7 @@ search_query = st.sidebar.text_input("Search by Symbol, Name, etc...", key="sear
 
 st.sidebar.markdown("---")
 st.sidebar.header("📑 Select a Tab")
-sheet_names = ["Top 250 Stocks", "NSE Fundamentals", "Final List", "Final List 2", "Diff @ 200 DMA", "+%", "-%"]
+sheet_names = ["NSE Price Data", "NSE Fundamentals", "Final List", "Final List 2", "Diff @ 200 DMA", "+%", "-%"]
 selected_sheet = st.sidebar.selectbox("Choose sheet", sheet_names, key="filter_sheet")
 
 # ---------- Main Execution ----------
