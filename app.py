@@ -193,8 +193,12 @@ text
 
 HIDDEN_COLUMNS_BY_NAME = {
     "NSE Price Data": [
+        "7 DMA",
+        "15 DMA",
+        "20 DMA",
         "50 DMA",
         "100 DMA",
+        "150 DMA",
         "200 DMA",
         "NSE 1",
         "Trading View 1",
