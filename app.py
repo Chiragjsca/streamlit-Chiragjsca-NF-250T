@@ -322,7 +322,8 @@ COLUMN_ORDER_BY_LETTER = {
     "NSE Fundamentals": [],
     "Final List": [],
     "Final List 2": [],
-    "Diff @ 200 DMA": [],
+    "-Diff @ 200 DMA": [],
+    "+Diff @ 200 DMA": [],
     "+%": [],
     "-%": [],
 }
@@ -1392,7 +1393,7 @@ search_query = st.sidebar.text_input("Search by Symbol, Name, etc...", key="sear
 
 st.sidebar.markdown("---")
 st.sidebar.header("📑 Select a Tab")
-sheet_names = ["NSE Price Data", "NSE Fundamentals", "Final List", "Final List 2", "Diff @ 200 DMA", "+%", "-%"]
+sheet_names = ["NSE Price Data", "NSE Fundamentals", "Final List", "Final List 2", "-Diff @ 200 DMA", "+Diff @ 200 DMA", "+%", "-%"]
 selected_sheet = st.sidebar.selectbox("Choose sheet", sheet_names, key="filter_sheet")
 
 # ---------- Main Execution ----------
