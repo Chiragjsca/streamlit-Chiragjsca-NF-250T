@@ -218,8 +218,8 @@ HIDDEN_COLUMNS_BY_NAME = {
 # letters for any sheet to hide other columns by position, or delete letters to unhide.
 HIDDEN_COLUMNS_BY_LETTER = {
     "NSE Price Data": [
-        "E", "F", "G",
-        "AA", "AB", "AC", "AD", "AE", "AF", "AG", "AH",
+        "AY", "AZ",
+        "BA", "BB",
     ],
     "NSE Fundamentals": [],
     "Final List": [],
